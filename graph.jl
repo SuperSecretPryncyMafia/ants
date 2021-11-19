@@ -11,13 +11,13 @@ Point(id, value) = Point(id, value, [])
 mutable struct UndirectedPath
     connection::Pair{Int, Int}
     weight::Int
+    ants_crossed::Int
 end
 
 mutable struct Graph
     points::Vector{Point}
     paths::Vector{UndirectedPath}
 end
-
 
 function point_at(graph::Graph, point_id::Int)
     for point in graph.points
@@ -27,6 +27,14 @@ function point_at(graph::Graph, point_id::Int)
     end
     println("No point witch such ID.")
     return NaN
+end
+
+function point_id(graph::Graph, point_at::Point)
+    for index in 1:length(graph.points)
+        if graph.points[index] == point_at
+            return graph.points[index].id
+        end
+    end
 end
 
 function test_graph(graph::Graph)
