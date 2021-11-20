@@ -1,4 +1,8 @@
+# TODO:
+#   - Checking if Node has many out paths
+
 include("graph.jl")
+
 using Random
 using Distributions
 
@@ -43,16 +47,19 @@ graph.points = points
 println(graph.paths)
 
 function generate_map(x_coordinates, y_coordinates)
-    points = []
-    paths = []
+
+    points = Vector{Point}()
+    paths = Vector{UndirectedPath}()
     len_x = length(x_coordinates)
     
     if len_x == length(y_coordinates)
         for i in 1:len_x
-            append!(points, Point(i, 0, [x_coordinates[i], y_coordinates[i]]))
+            append!(points, [Point(i, 0, [x_coordinates[i], y_coordinates[i]])])
             if i > 1
-                for point in points[1, end-1]
-                    append!(path, UndirectedPath(Pair(point.id, points[end]), 1, 0))
+                for point in points[1:end-1]
+                    path = UndirectedPath(Pair(point.id, points[end].id), 1, 0)
+                    append!(paths, [path])
+                    add_path(point, path)
                 end
             end
         end
@@ -178,6 +185,6 @@ end
 # ants(paths)
 # ants(paths)
 # ants(paths)
-
+generate_map(x, y)
 
 

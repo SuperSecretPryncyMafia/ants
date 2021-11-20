@@ -1,22 +1,41 @@
 
-mutable struct Point
-    id::Int
-    value::Float16
-    coordiantes::Vector{Real}
-    
-end
-
-Point(id, value) = Point(id, value, [])
-
 mutable struct UndirectedPath
     connection::Pair{Int, Int}
     weight::Int
     ants_crossed::Int
 end
 
+mutable struct Point
+    id::Int
+    value::Float16
+    coordiantes::Vector{Real}
+    connections::Vector{UndirectedPath}
+end
+
+Point(id, value) = Point(id, value, [], [])
+Point(id, value, coordinates) = Point(id, value, coordinates, [])
+
 mutable struct Graph
     points::Vector{Point}
     paths::Vector{UndirectedPath}
+end
+
+function add_path(point::Point, path::UndirectedPath)
+    append!(point.connections, [path])
+end
+
+function add_paths(point::Point, paths::Vector{UndirectedPath})
+    for path in paths
+        add_path(point, [path])
+    end
+end
+
+function describe(point::Point)
+    # TODO
+end
+
+function describe(path::UndirectedPath)
+    # TODO
 end
 
 function point_at(graph::Graph, point_id::Int)
