@@ -48,6 +48,27 @@ function point_at(graph::Graph, point_id::Int)
     return NaN
 end
 
+function find_all_paths_with_point(graph::Graph, point::Point)
+    for path in graph.paths
+        if path.connection.first == point.id
+            append!(point.connections, [path])
+        end
+    end
+end
+
+# function all_paths_from(graph::Graph, point::Point)
+#     paths_from_point = []
+
+#     for path in graph.paths
+#         if point.id in path.connection
+#             append!(paths_from_point, path)
+#         end
+#     end
+
+#     return paths_from_point
+# end
+
+
 function point_id(graph::Graph, point_at::Point)
     for index in 1:length(graph.points)
         if graph.points[index] == point_at
