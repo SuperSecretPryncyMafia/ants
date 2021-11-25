@@ -43,7 +43,7 @@ function generate_map(x_coordinates, y_coordinates)
             append!(points, [Point(i, 0, [x_coordinates[i], y_coordinates[i]])])
             if i > 1
                 for point in points[1:end-1]
-                    path = UndirectedPath(Pair(point.id, points[end].id), 1, 0)
+                    path = UndirectedPath(Pair(point.id, points[end].id), sqrt(x_coordinates[i]^2 + y_coordinates[i]^2), 0)
                     append!(paths, [path])
                     add_path(point, path)
                 end
@@ -80,7 +80,6 @@ function rulette_choose_lower(paths, decision_table, k, d, point)
     
 end
 
-
 function rulette_choose_higher(paths, decision_table, k, d, point)
     println(decision_table[point.id])
     upper_bound = maximum(decision_table[point.id])
@@ -97,15 +96,11 @@ function rulette_choose_higher(paths, decision_table, k, d, point)
     
 end
 
-
 function rulette_choose(decision_table, point)
-    println(decision_table[point.id])
     upper_bound = maximum(decision_table[point.id])
     println("Decision table at key point.id:    ", decision_table[point.id])
     scalled = [i/upper_bound for i in decision_table[point.id]]
-    println(scalled)
     decision = rand(Uniform(0, 1))
-    
     for (i, path) in enumerate(scalled)
         if path >= decision
             return point.connections[i]
@@ -147,19 +142,38 @@ function init_decision_table(graph::Graph)
         for path in point.connections
             sum_decisions += (1/path.weight)^β
         end
-        println(sum_decisions)
+        println(point.connections)
         for path in point.connections
             append!(decision_table[point.id], ((1/path.weight)^β)/sum_decisions)
         end
 
         # return decision_table[point.id]
-        #println(sum(decision_table[point.id]))
+        # println(sum(decision_table[point.id]))
     end
     return decision_table
 end
 
-function update_decision_table(decision_table::Dict)
+function leave_pheromones(path::UndirectedPath)
+    path.pheromones += 1/path.weight
+end
 
+function update_decision_table(graph::Graph, decision_table)
+    α = 1
+    β = 5
+    #  decision_table = Dict()
+    for point in graph.points
+        # find_all_paths_with_point(graph, point)
+        sum_decisions = 0
+        # println(point.connections)
+        for (i, path) in enumerate(point.connections)
+            sum_decisions += (decision_table[point.id][i]^α)*((1/path.weight)^β)
+        end
+        
+        for (i, path) in enumerate(point.connections)
+            decision_table[point.id][i] = (decision_table[point.id][i]^α)*((1/path.weight)^β)/sum_decisions
+        end
+    end
+    return decision_table
 end
 
 function ant_move_to(decision::Point, ant::Ant)
@@ -175,49 +189,47 @@ function traveling_sales(graph::Graph, starting_point_id::Int, finish_point_id::
     number_of_points = length(graph.points)
     ants = init_ants(starting_point, number_of_points)
     decision_table = init_decision_table(graph)
-    k = 20
-    # d = 2 // Depends on the number of branches
 
     for ant in ants
         while ant.current_point != finish_point
             # Check if point has a crossroad
-            paths = ant.current_point.connections # find_all_paths_with_point(graph, ant.current_point)
+            paths = ant.current_point.connections
             if length(paths) > 1
                 decision = rulette_choose(decision_table, ant.current_point)
                 ant_move_to(points[decision.connection.second], ant)
             end
-            
-            println(decision)
 
-            # ADD PHEROMONE
-            # UPDATE DECISION TABLE
-            
-            
-            # If true then choose one with rulette
-            # Give feromone to the taken path
-            # Else proceed
-            # check the point as visited
+            leave_pheromones(decision)
+            decision_table = update_decision_table(graph, decision_table)
+            # TODO:
+            # - add evaporation
         end
     end
 end
 
-function ant_system(grapg::Graph)
+function evaporation(graph::Graph)
+
+end
+
+function ant_system(graph::Graph)
     # Initialization
-    map = graph
     number_of_points = length(graph.points)
-    ants = init_ants(graph, number_of_points)
+    ants = init_ants(graph, number_of_points) 
+    iteration = 0
     k = 20
     d = 2
 
     starting_point = point_at(graph, starting_point_id)
     finish_point = point_at(graph, finish_point_id)
-
-    for ant in ants
-        while ant.current_point != finish_point
-            # Check if point has a crossroad
-            # If true then choose one with rulette
-            # Else proceed
-            # check the point as visited
+    
+    for iteration in 1:max_iter
+        for ant in ants
+            while ant.current_point != finish_point
+                # Check if point has a crossroad
+                # If true then choose one with rulette
+                # Else proceed
+                # check the point as visited
+            end
         end
     end
 end
@@ -243,11 +255,11 @@ function intro_ants(graph::Graph)
 end
 
 
-#find_all_paths_with_point(graph, point1)
-dt = init_decision_table(graph)
-traveling_sales(graph, 1, 3)
-println(rulette_choose(dt, point1))
-println(rulette_choose(dt, point2))
-# generate_map(x, y)
+# find_all_paths_with_point(graph, point1)
+# dt = init_decision_table(graph)
+# traveling_sales(graph, 1, 3)
+# println(rulette_choose(dt, point1))
+# println(rulette_choose(dt, point2))
+generate_map(x, y)
 
 

@@ -1,8 +1,9 @@
 
+
 mutable struct UndirectedPath
     connection::Pair{Int, Int}
-    weight::Int
-    ants_crossed::Int
+    weight::Real
+    pheromones::Int
 end
 
 mutable struct Point
