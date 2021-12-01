@@ -19,10 +19,10 @@ function data_init()
     point2 = Point(2, 1)
     point3 = Point(3, 1)
 
-    path1 = UndirectedPath(Pair(point1.id, point2.id), 2, 0, 0)
-    path2 = UndirectedPath(Pair(point1.id, point2.id), 1, 0, 0)
-    path3 = UndirectedPath(Pair(point2.id, point3.id), 1, 0, 0)
-    path4 = UndirectedPath(Pair(point2.id, point3.id), 2, 0, 0)
+    path1 = UndirectedPath(Pair(point1.id, point2.id), 2, 1, 0)
+    path2 = UndirectedPath(Pair(point1.id, point2.id), 1, 1, 0)
+    path3 = UndirectedPath(Pair(point2.id, point3.id), 1, 1, 0)
+    path4 = UndirectedPath(Pair(point2.id, point3.id), 2, 1, 0)
 
     graph = Graph([], [])
 
@@ -101,7 +101,7 @@ end
 
 function rulette_choose(decision_table, point)
     upper_bound = maximum(decision_table[point.id])
-    println("Decision table at key point.id:    ", decision_table[point.id])
+    println("Decision table at key point.id:    ", point.id, "\t", decision_table[point.id])
     scalled = [i/upper_bound for i in decision_table[point.id]]
     decision = rand(Uniform(0, 1))
     for (i, path) in enumerate(scalled)
@@ -146,18 +146,10 @@ function init_decision_table(graph::Graph)
     for point in graph.points
         find_all_paths_with_point(graph, point)
         decision_table[point.id] = []
-        sum_decisions = 0
 
         for path in point.connections
-            sum_decisions += (1/path.weight)^β
+            append!(decision_table[point.id], 1/length(point.connection))
         end
-        println(point.connections)
-        for path in point.connections
-            append!(decision_table[point.id], ((1/path.weight)^β)/sum_decisions)
-        end
-
-        # return decision_table[point.id]
-        # println(sum(decision_table[point.id]))
     end
     return decision_table
 end
@@ -230,14 +222,16 @@ function traveling_sales(graph::Graph, starting_point_id::Int, finish_point_id::
             paths = ant.current_point.connections
             if length(paths) > 1
                 decision = rulette_choose(decision_table, ant.current_point)
+############################################################################################
                 ant_move_to(decision, graph.points[decision.connection.second], ant)
             end
             leave_pheromones(decision)
             
             # TODO:
-            # - add evaporation
+            # - reimplement updating of decision table
         end
         decision_table = update_decision_table(graph, decision_table, ants)
+#############################################################################################
         # leave_pheromones(decision)
         # decision_table = update_decision_table(graph, decision_table)
     end
