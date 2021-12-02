@@ -19,10 +19,10 @@ function data_init()
     point2 = Point(2, 1)
     point3 = Point(3, 1)
 
-    path1 = UndirectedPath(Pair(point1.id, point2.id), 2, 1, 0)
-    path2 = UndirectedPath(Pair(point1.id, point2.id), 1, 1, 0)
-    path3 = UndirectedPath(Pair(point2.id, point3.id), 1, 1, 0)
-    path4 = UndirectedPath(Pair(point2.id, point3.id), 2, 1, 0)
+    path1 = UndirectedPath(Pair(point1.id, point2.id), 2, 1.0, 0)
+    path2 = UndirectedPath(Pair(point1.id, point2.id), 1, 1.0, 0)
+    path3 = UndirectedPath(Pair(point2.id, point3.id), 1, 1.0, 0)
+    path4 = UndirectedPath(Pair(point2.id, point3.id), 2, 1.0, 0)
 
     graph = Graph([], [])
 
@@ -101,7 +101,7 @@ end
 
 function rulette_choose(decision_table, point)
     upper_bound = maximum(decision_table[point.id])
-    println("Decision table at key point.id:    ", point.id, "\t", decision_table[point.id])
+    # println("Decision table at key point.id:    ", point.id, "\t", decision_table[point.id])
     scalled = [i/upper_bound for i in decision_table[point.id]]
     decision = rand(Uniform(0, 1))
     for (i, path) in enumerate(scalled)
@@ -148,47 +148,48 @@ function init_decision_table(graph::Graph)
         decision_table[point.id] = []
 
         for path in point.connections
-            append!(decision_table[point.id], 1/length(point.connection))
+            append!(decision_table[point.id], 1)
         end
     end
     return decision_table
 end
 
 function leave_pheromones(path::UndirectedPath)
-    path.pheromones += 1/path.weight
+    path.pheromones += 1
 end
 
-function Δτ(ant)
+function Δτ(ant, path)
     """
     Calculating the Δτ 
     """
-    sum = 0
-    for path in ant.used_paths
-        sum += 1/path.weight
+    if path in ant.used_paths
+        return 1/path.weight
+    else
+        return 0
     end
-
-    return sum
 end
 
-function update_decision_table(graph::Graph, decision_table, ants::Vector{Any})
+function update_decision_table(graph::Graph, decision_table, ant::Ant)
     """
     Updates the decision table after changes.
     """
     α = 1
     β = 5
     ρ = 0.5
-    for ant in ants
-        for point in graph.points
-            sum_decisions = 0
+
+    for point in graph.points
+        sum_decisions = 0
+        
+        for path in point.connections
+            path.pheromones = ρ*path.pheromones + Δτ(ant, path)
+            sum_decisions += (path.pheromones^α)*((1/path.weight)^β)
+        end
+        
+        for (i, path) in enumerate(point.connections)
             
-            for (i, path) in enumerate(point.connections)
-                sum_decisions += (path.pheromones^α)*((1/path.weight)^β)
-            end
-            
-            for (i, path) in enumerate(point.connections)
-                path.pheromones = ρ*path.pheromones + Δτ(ant)
-                decision_table[point.id][i] = (path.pheromones^α)*((1/path.weight)^β)/sum_decisions
-            end
+            println("Pheromones:\t", path.pheromones)
+            decision_table[point.id][i] = (path.pheromones*((1/path.weight)^β))/sum_decisions
+            println("Decision table at\t", point.id, "\t", decision_table[point.id][i])
         end
     end
     return decision_table
@@ -202,7 +203,7 @@ function ant_move_to(path::UndirectedPath, point::Point, ant::Ant)
     ant - Ant - Ant that made the decision 
     """
     
-    append!(ant.used_paths, [path]hh)
+    append!(ant.used_paths, [path])
     ant.current_point = point
     append!(ant.visited_points, [point])
 end
@@ -229,8 +230,8 @@ function traveling_sales(graph::Graph, starting_point_id::Int, finish_point_id::
             
             # TODO:
             # - reimplement updating of decision table
+            decision_table = update_decision_table(graph, decision_table, ant)
         end
-        decision_table = update_decision_table(graph, decision_table, ants)
 #############################################################################################
         # leave_pheromones(decision)
         # decision_table = update_decision_table(graph, decision_table)
