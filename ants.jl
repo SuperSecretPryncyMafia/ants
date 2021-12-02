@@ -202,7 +202,7 @@ function ant_move_to(path::UndirectedPath, point::Point, ant::Ant)
     ant - Ant - Ant that made the decision 
     """
     
-    append!(ant.used_paths, [path])
+    append!(ant.used_paths, [path]hh)
     ant.current_point = point
     append!(ant.visited_points, [point])
 end
@@ -238,7 +238,6 @@ function traveling_sales(graph::Graph, starting_point_id::Int, finish_point_id::
 end
 
 function evaporation(graph::Graph)
-
 end
 
 function ant_system(graph::Graph, max_iter::Int=200)
