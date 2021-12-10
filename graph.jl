@@ -10,7 +10,7 @@ end
 mutable struct Point
     id::Int
     value::Float16
-    coordiantes::Vector{Real}
+    coordinates::Vector{Real}
     connections::Vector{UndirectedPath}
 end
 
@@ -50,13 +50,24 @@ function point_at(graph::Graph, point_id::Int)
     return NaN
 end
 
-function find_all_paths_with_point(graph::Graph, point::Point)
+function find_all_connections(graph::Graph, point::Point)
     for path in graph.paths
         if path.connection.first == point.id
             append!(point.connections, [path])
         end
     end
 end
+
+function find_all_paths_with_point(graph::Graph, point::Point)
+    conns = [] 
+    for path in graph.paths
+        if path.connection.first == point.id
+            append!(conns, [path])
+        end
+    end
+    return conns
+end
+
 
 # function all_paths_from(graph::Graph, point::Point)
 #     paths_from_point = []
