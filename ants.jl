@@ -15,7 +15,9 @@ mutable struct Ant
 end
 
 function data_init()
-
+    """
+    Initialization of graph for the traveling sales ant
+    """
     point1 = Point(1, 1)
     point2 = Point(2, 1)
     point3 = Point(3, 1)
@@ -37,7 +39,9 @@ function data_init()
 end
 
 function generate_map(x_coordinates, y_coordinates)
-
+    """
+    Generator of graphs based on given points coordinates
+    """
     points = Vector{Point}()
     paths = Vector{UndirectedPath}()
     len_x = length(x_coordinates)
@@ -50,7 +54,7 @@ function generate_map(x_coordinates, y_coordinates)
         for i in 1:len_x
             for j in 1:len_x
                 if points[i] != points[j]
-                    path = UndirectedPath(Pair(points[i].id, points[j].id), sqrt(abs(x_coordinates[i]-x_coordinates[j])^2 + abs(y_coordinates[i]-y_coordinates[j])^2), 1, 0)
+                    path = UndirectedPath(Pair(points[i].id, points[j].id), sqrt(abs(x_coordinates[i]-x_coordinates[j])^2 + abs(y_coordinates[i]-y_coordinates[j])^2), 0.0001, 0)
                     append!(paths, [path])
                     add_path(points[i], path)
                 end
@@ -67,16 +71,20 @@ function generate_map(x_coordinates, y_coordinates)
 end
 
 function choose_branch(point, paths)
+    # LEGACY UNUSED #
     k = 20
     d = 2
     PR(paths, k, d)
 end
 
 function PR(paths, k, d)
+    # LEGACY UNUSED #
     return ((paths[1].ants_crossed + k)^d) / (((paths[1].ants_crossed + k)^d) + ((paths[2].ants_crossed + k)^d))  
 end
 
 function rulette_choose_lower(paths, decision_table, k, d, point)
+    # LEGACY UNUSED #
+    
     println(decision_table[point.id])
     upper_bound = maximum(decision_table[point.id])
     println("Decision table at key point.id:    ", decision_table[point.id])
@@ -93,6 +101,7 @@ function rulette_choose_lower(paths, decision_table, k, d, point)
 end
 
 function rulette_choose_higher(paths, decision_table, k, d, point)
+    # LEGACY UNUSED #
     println(decision_table[point.id])
     upper_bound = maximum(decision_table[point.id])
     println("Decision table at key point.id:    ", decision_table[point.id])
@@ -208,6 +217,9 @@ end
 # end
 
 function init_ants(graph::Graph, number_of_ants::Int)
+    """
+    Ant vector initialization with starting point of every ant choosen as random
+    """
     ants = []
     starting_points = []
     for i in 1:number_of_ants
@@ -219,6 +231,7 @@ function init_ants(graph::Graph, number_of_ants::Int)
 end
 
 function init_ants(starting_point::Point, number_of_ants::Int)
+    # init ants when all are starting from the same place
     ants = []
     for i in 1:number_of_ants
         append!(ants, [Ant(starting_point, [], [])])
@@ -227,18 +240,22 @@ function init_ants(starting_point::Point, number_of_ants::Int)
 end
 
 function init_pheromones(graph::Graph, amount_of_pheromone::Float16)
+    # initialization of pheromons disposition UNUSED
     for path in graph.paths
         path.pheromones = amount_of_pheromone
     end
 end
 
 function show_ants(ants::Vector{Ant})
+    # UNUSED #
     for ant in ants
         println(ant)
     end
 end
 
 function best_ant(ants::Vector{Any})
+    # Searching for the best ant. Used in the end of the program
+    
     best_ant_len = Inf
     best_ant_index = -1
     for (i, ant) in enumerate(ants)
@@ -265,15 +282,17 @@ function init_decision_table(graph::Graph)
         decision_table[point.id] = []
 
         for path in point.connections
-            append!(decision_table[point.id], 0.00001)
+            append!(decision_table[point.id], 0.1)
         end
     end
     return decision_table
 end
 
 function leave_pheromones(ants::Vector{Any})
+    # Here we need to calculate how much pheromone is being deposited on the full path of the ant
+    # Shorter overall path means higher level of pheromones being spread. 
     for ant in ants
-        sum_distance = 0
+        sum_distance = 0.0
         for path in ant.used_paths
             sum_distance += path.weight
         end
