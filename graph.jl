@@ -1,6 +1,7 @@
 
 
 mutable struct UndirectedPath
+    id::Int
     connection::Pair{Int, Int}
     weight::Real
     pheromones::Float64
