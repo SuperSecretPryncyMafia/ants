@@ -142,36 +142,46 @@ function rulette_choose(decision_table, point)
 end
 
 function rulette_choose(decision_table, graph::Graph, ant::Ant)
+
+    # Creating dick with paths as a keys
     avaliable_paths = Dict()
+    # search for point with this ID
     current_point = point_at(graph, ant.current_point.id)
+    # for every point id in decision table
     for (i,x) in enumerate(decision_table[ant.current_point.id])
+        # if i in the bounds
         if i < length(graph.points)
-            x_city = point_at(graph, ant.current_point.connections[i].connection.second)
             potential_path = current_point.connections[i]
+            # x_city is the poitn which is on the other end of the path in question
+            x_city = point_at(graph, potential_path.connection.second)
+            # if city was not visited yet
             if x_city ∉ ant.visited_points
+                # we take value of decision table for this path and save
                 avaliable_paths[potential_path] = x
             end
         end
     end
-    upper_bound = maximum(values(avaliable_paths))
-    scalled = []
-    for i in values(avaliable_paths)
-        new_value = i/upper_bound
-        if !isempty(scalled)
-            summed = sum(scalled)
-        else
-            summed = 0
+    if length(values(avaliable_paths)) > 0
+        upper_bound = maximum(values(avaliable_paths))
+        scalled = []
+        for i in values(avaliable_paths)
+            new_value = i/upper_bound
+            if !isempty(scalled)
+                summed = sum(scalled)
+            else
+                summed = 0
+            end
+            append!(scalled, [summed + new_value])
         end
-        append!(scalled, [summed + new_value])
-    end
-    upper_bound = maximum(scalled)
-    decision = rand(Uniform(0, 1))*upper_bound
-    for (i, choice) in enumerate(scalled)
-        if choice >= decision
-            return collect(keys(avaliable_paths))[i]
+        upper_bound = maximum(scalled)
+        decision = rand(Uniform(0, 1))*upper_bound
+        for (i, choice) in enumerate(scalled)
+            if choice >= decision
+                return collect(keys(avaliable_paths))[i]
+            end
         end
     end
-    
+    return NaN
 end
 
 function rulette_choose(decision_table, graph::Graph, ant::Ant, exclude::Point)
@@ -433,21 +443,18 @@ function ant_system(graph::Graph, start_destination_id::Int, max_iter::Int=200)
     for i in 1:max_iter
         ants, starting_points = init_ants(graph, number_of_points)
         for (j, ant) in enumerate(ants)
-            points_left = filter(e->e != starting_points[j], graph.points)
             while length(ant.visited_points) < number_of_points-1
                 # Check if point has a crossroad
-                
                 decision = rulette_choose(decision_table, graph, ant, starting_points[j])
+                if decision == NaN 
+                    break
+                end
                 if ant_move_to(decision, graph.points[decision.connection.second], ant) == -1
                     println("errrrr")
-                else
-                    points_left = filter(e->e != decision, points_left)
                 end
-                    # leave_pheromones_colony(decision)
             end
             decision = rulette_choose(decision_table, graph, ant)
             ant_move_to(decision, graph.points[decision.connection.second], ant)
-            
         end
         leave_pheromones(ants)
         decision_table = update_decision_table(graph, decision_table, ants)
