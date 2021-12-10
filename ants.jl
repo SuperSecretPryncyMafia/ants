@@ -192,29 +192,30 @@ function ant_available_paths(graph::Graph, ant::Ant)
     avaliable_paths = Vector{UndirectedPath}()
     for path in ant.current_point.connections
         if  path ∉ ant.used_paths &&
-            path.second != ant.starting_point &&
-            path.first != ant.starting_point
-                append!(avaliable_paths, path)
+            path.connection.second != ant.starting_point &&
+            path.connection.first != ant.starting_point
+                append!(avaliable_paths, [path])
         end
     end
 
     return avaliable_paths
 end
 
-function roll_next_path(decision_table::Dict{Any}, paths::Vector{Any}, ant::Ant)
+function roll_next_path(graph::Graph, decision_table::Dict{Any, Any}, paths::Vector{UndirectedPath}, ant::Ant)
     top = 0
-    order = Dict()
+    order = zeros(length(paths))
     for (i, path) in enumerate(paths)
         if path.connection.first == ant.current_point.id 
-            order[i] = decision_table[path.connection.second][path]
+			println(point_at(graph, path.connection.second))
+            order[i] = decision_table[point_at(graph, path.connection.second)][path]
             top += order[i]
         else
-            order[i] = decision_table[path.connection.first][path]
+            order[i] = decision_table[point_at(graph, path.connection.first)][path]
             top += order[i]
         end
     end
 
-    roll = rand!(Uniform(0, top))
+    roll = rand(Uniform(0, 1))*top
     
     for i in 1:length(order)
         if roll < order[i]
@@ -279,7 +280,6 @@ function init_ants(graph::Graph, number_of_ants::Int)
 	ants = []
 	for i in 1:number_of_ants
 		starting_point = graph.points[rand(1:number_of_ants)]
-		append!(starting_points, [starting_point])
 		append!(ants, [Ant(starting_point, [], [], 0, starting_point)])
 	end
 	return ants
@@ -458,7 +458,7 @@ function update_decision_table(graph::Graph, decision_table, ants::Vector{Any})
 			sum_decisions += path.pheromones^α * (1/path.weight)^β #η^β
 		end
 		for (i, path) in enumerate(point.connections)
-			decision_table[point.id][i] = (path.pheromones*((1/path.weight)^β))/sum_decisions
+			decision_table[point][path][i] = (path.pheromones*((1/path.weight)^β))/sum_decisions
 		end
 	end
 
@@ -525,16 +525,14 @@ function ant_system(graph::Graph, start_destination_id::Int, max_iter::Int=200)
 		ants = init_ants(graph, number_of_points)
 		for ant in ants
 			while length(ant.visited_points) < number_of_points-1
-				# Check if point has a crossroad
-				decision = rulette_choose(decision_table, graph, ant, ant.starting_point)
-				if decision == NaN 
-					break
-				end
+				paths = ant_available_paths(graph, ant)
+				decision = roll_next_path(graph, decision_table, paths, ant)
 				if ant_move_to(decision, graph.points[decision.connection.second], ant) == -1
 					println("errrrr")
 				end
 			end
-			decision = rulette_choose(decision_table, graph, ant)
+			paths = ant_available_paths(graph, ant)
+			decision = roll_next_path(graph, decision_table, paths, ant)
 			ant_move_to(decision, graph.points[decision.connection.second], ant)
 		end
 		#leave_pheromones(ants)
@@ -543,7 +541,7 @@ function ant_system(graph::Graph, start_destination_id::Int, max_iter::Int=200)
 	
 	# best_path()  -- TODO
 
-	[println(decision_table[x],"\t", x) for x in keys(decision_table)]
+	# [println(decision_table[x],"\t", x) for x in keys(decision_table)]
 
 	return best_ant(ants)
 end
