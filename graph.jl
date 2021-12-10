@@ -4,6 +4,7 @@ mutable struct UndirectedPath
     connection::Pair{Int, Int}
     weight::Real
     pheromones::Float64
+    Δτ::Float64
     number_of_ants_crossed::Int
 end
 
@@ -14,6 +15,7 @@ mutable struct Point
     connections::Vector{UndirectedPath}
 end
 
+UndirectedPath( c, w, p ) = UndirectedPath( c, w, p, 0, 0 )
 Point(id, value) = Point(id, value, [], [])
 Point(id, value, coordinates) = Point(id, value, coordinates, [])
 
