@@ -1,11 +1,20 @@
 
+mutable struct DirectedPath
+    connection::Pair{Int, Int}
+end
 
 mutable struct UndirectedPath
-    connection::Pair{Int, Int}
+    id::Int
     weight::Real
     pheromones::Float64
+    directions::Pair{Pair{Int,Int}, Pair{Int, Int}}
     Δτ::Float64
     number_of_ants_crossed::Int
+
+    function UndirectedPath(id, connection, weight, pheromones)
+        directions = Pair(connection, reverse(connection))
+        new(id, weight, directions, pheromones, 0, 0)
+    end
 end
 
 mutable struct Point
@@ -15,7 +24,8 @@ mutable struct Point
     connections::Vector{UndirectedPath}
 end
 
-UndirectedPath( c, w, p ) = UndirectedPath( c, w, p, 0, 0 )
+#UndirectedPath(id, connection, weight, pheromones ) = UndirectedPath(Pair{DirectedPath(id, connection, weight, pheromones, 0, 0), DirectedPath(id, reverse(connection), weight, pheromones, 0, 0 )})
+
 Point(id, value) = Point(id, value, [], [])
 Point(id, value, coordinates) = Point(id, value, coordinates, [])
 
@@ -54,7 +64,7 @@ end
 
 function find_all_connections(graph::Graph, point::Point)
     for path in graph.paths
-        if path.connection.first == point.id
+        if path.connection.first == point.id || path.connection.second == point.id
             append!(point.connections, [path])
         end
     end
@@ -63,7 +73,25 @@ end
 function find_all_paths_with_point(graph::Graph, point::Point)
     conns = [] 
     for path in graph.paths
-        if path.connection.first == point.id
+        if path.connection.first == point.id || path.connection.second == point.id
+            append!(conns, [path])
+        end
+    end
+    return conns
+end
+
+function find_all_connections(paths::Vector{UndirectedPath}, point::Point)
+    for path in paths
+        if path.connection.first == point.id || path.connection.second == point.id
+            append!(point.connections, [path])
+        end
+    end
+end
+
+function find_all_paths_with_point(paths::Vector{UndirectedPath}, point::Point)
+    conns = [] 
+    for path in paths
+        if path.connection.first == point.id || path.connection.second == point.id
             append!(conns, [path])
         end
     end

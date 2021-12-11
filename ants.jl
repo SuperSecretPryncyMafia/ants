@@ -26,10 +26,10 @@ function data_init()
 	point2 = Point(2, 1)
 	point3 = Point(3, 1)
 
-	path1 = UndirectedPath(Pair(point1.id, point2.id), 2, 1.0)
-	path2 = UndirectedPath(Pair(point1.id, point2.id), 1, 1.0)
-	path3 = UndirectedPath(Pair(point2.id, point3.id), 2, 1.0)
-	path4 = UndirectedPath(Pair(point2.id, point3.id), 1, 1.0)
+	path1 = UndirectedPath(1,Pair(point1.id, point2.id), 2, 1.0)
+	path2 = UndirectedPath(2,Pair(point1.id, point2.id), 1, 1.0)
+	path3 = UndirectedPath(3,Pair(point2.id, point3.id), 2, 1.0)
+	path4 = UndirectedPath(4,Pair(point2.id, point3.id), 1, 1.0)
 
 	graph = Graph([], [])
 
@@ -55,12 +55,14 @@ function generate_map(x_coordinates, y_coordinates)
 			append!(points, [Point(i, 0, [x_coordinates[i], y_coordinates[i]])])
 		end
 
+		path_id = 1
 		for i in 1:len_x
 			for j in 1:len_x
 				if points[i] != points[j]
-					path = UndirectedPath(Pair(points[i].id, points[j].id), sqrt(abs(x_coordinates[i]-x_coordinates[j])^2 + abs(y_coordinates[i]-y_coordinates[j])^2), 0.0001 )
+					path = UndirectedPath(path_id, Pair(points[i].id, points[j].id), sqrt(abs(x_coordinates[i]-x_coordinates[j])^2 + abs(y_coordinates[i]-y_coordinates[j])^2), 0.0001 )
 					append!(paths, [path])
 					add_path(points[i], path)
+					path_id +=1
 				end
 			end
 		end
@@ -86,40 +88,6 @@ function PR(paths, k, d)
 	return ((paths[1].ants_crossed + k)^d) / (((paths[1].ants_crossed + k)^d) + ((paths[2].ants_crossed + k)^d))  
 end
 
-function rulette_choose_lower(paths, decision_table, k, d, point)
-	# LEGACY UNUSED #
-	
-	println(decision_table[point.id])
-	upper_bound = maximum(decision_table[point.id])
-	println("Decision table at key point.id:	", decision_table[point.id])
-	scalled = [i/upper_bound for i in decision_table[point.id]]
-	println(scalled)
-	decision = rand(Uniform(0, 1))
-	
-	for (i, path) in enumerate(scalled)
-		if path >= decision
-			return point.connections[i]
-		end
-	end
-	
-end
-
-function rulette_choose_higher(paths, decision_table, k, d, point)
-	# LEGACY UNUSED #
-	println(decision_table[point.id])
-	upper_bound = maximum(decision_table[point.id])
-	println("Decision table at key point.id:	", decision_table[point.id])
-	scalled = [i/upper_bound for i in decision_table[point.id]]
-	println(scalled)
-	decision = rand(Uniform(0, 1))
-	
-	for (i, path) in enumerate(scalled)
-		if path <= decision
-			return point.connections[i]
-		end
-	end
-	
-end
 
 function rulette_choose(decision_table, point)
 	upper_bound = maximum(decision_table[point.id])
@@ -190,12 +158,15 @@ end
 
 function ant_available_paths(graph::Graph, ant::Ant)
     avaliable_paths = Vector{UndirectedPath}()
-    for path in ant.current_point.connections
-        if  path ∉ ant.used_paths &&
-            path.connection.second != ant.starting_point &&
-            path.connection.first != ant.starting_point
-                append!(avaliable_paths, [path])
-        end
+
+	for path in ant.current_point.connections
+		for connection in path.directions
+			if path.directions.first.first == ant.current_point && path.connection.second ∉ ant.visited_points 
+
+			if path.connection ∉ ant.used_paths && path.connection.second != ant.starting_point && path.connection.first != ant.starting_point
+				append!(avaliable_paths, [path])
+			end
+		end
     end
 
     return avaliable_paths
@@ -206,12 +177,12 @@ function roll_next_path(graph::Graph, decision_table::Dict{Any, Any}, paths::Vec
     order = zeros(length(paths))
     for (i, path) in enumerate(paths)
         if path.connection.first == ant.current_point.id 
-			println(point_at(graph, path.connection.second))
-            order[i] = decision_table[point_at(graph, path.connection.second)][path]
-            top += order[i]
-        else
+			println(point_at(graph, path.connection.first))
             order[i] = decision_table[point_at(graph, path.connection.first)][path]
             top += order[i]
+        # else
+        #     order[i] = decision_table[point_at(graph, path.connection.first)][path]
+        #     top += order[i]
         end
     end
 
@@ -225,53 +196,6 @@ function roll_next_path(graph::Graph, decision_table::Dict{Any, Any}, paths::Vec
         end
     end
 end
-
-# function rulette_choose(decision_table, graph::Graph, ant::Ant, exclude::Point)
-# 	avaliable_paths = Dict()
-# 	# current_point = point_at(graph, ant.current_point.id)
-# 	for (i,x) in enumerate(decision_table[ant.current_point.id])
-# 		if i < length(graph.points)
-# 			x_city = point_at(graph, ant.current_point.connections[i].connection.second)
-# 			potential_path = current_point.connections[i]
-#             println("\n", "ANT=>\t", ant.used_paths, "\t", ant.starting_point)
-# 			#if x_city != exclude
-# 				if x_city ∉ ant.visited_points
-# 					avaliable_paths[potential_path] = x
-# 				end
-# 			#end
-# 		end
-# 	end
-# 	upper_bound = maximum(values(avaliable_paths))
-# 	scalled = []
-# 	for i in values(avaliable_paths)
-# 		new_value = i/upper_bound
-# 		if !isempty(scalled)
-# 			summed = sum(scalled)
-# 		else
-# 			summed = 0
-# 		end
-# 		append!(scalled, [summed + new_value])
-# 	end
-# 	upper_bound = maximum(scalled)
-# 	decision = rand(Uniform(0, 1))*upper_bound
-# 	for (i, choice) in enumerate(scalled)
-# 		if choice >= decision
-# 			return collect(keys(avaliable_paths))[i]
-# 		end
-# 	end
-# end
-
-function rulette_choose(decision_table, graph::Graph, ant::Ant, exclude::Point)
-
-end
-
-# function init_ants(graph::Graph, number_of_ants::Int)
-#	 ants = []
-#	 for i in 1:number_of_ants
-#		 append!(ants, Ant(graph.points[rand(1, number_of_ants)], [], []))
-#	 end
-#	 return ants
-# end
 
 function init_ants(graph::Graph, number_of_ants::Int)
 	"""
@@ -298,13 +222,6 @@ function init_pheromones(graph::Graph, amount_of_pheromone::Float16)
 	# initialization of pheromons disposition UNUSED
 	for path in graph.paths
 		path.pheromones = amount_of_pheromone
-	end
-end
-
-function show_ants(ants::Vector{Ant})
-	# UNUSED #
-	for ant in ants
-		println(ant)
 	end
 end
 
@@ -402,33 +319,6 @@ function update_decision_table_colony(graph::Graph, decision_table, ant::Ant)
 	return decision_table
 end
 
-#function update_decision_table(graph::Graph, decision_table, ants::Vector{Any})
-#	"""
-#	Updates the decision table after changes.
-#	"""
-#	α = 1
-#	β = 5
-#	ρ = 0.5
-#	for ant in ants
-#		for point in graph.points
-#			sum_decisions = 0
-#			
-#			for path in point.connections
-#				path.pheromones = ρ*path.pheromones + Δτ(ant, path)
-#				sum_decisions += (path.pheromones^α)*((1/path.weight)^β)
-#			end
-#			
-#			for (i, path) in enumerate(point.connections)
-#				
-#				# println("Pheromones:\t", path.pheromones)
-#				decision_table[point.id][i] = (path.pheromones*((1/path.weight)^β))/sum_decisions
-#				# println("Decision table at\t", point.id, "\t", decision_table[point.id][i])
-#			end
-#		end
-#	end
-#	return decision_table
-#end
-
 function update_decision_table(graph::Graph, decision_table, ants::Vector{Any})
 	"""
 	Updates the decision table after changes.
@@ -477,10 +367,8 @@ function ant_move_to(path::UndirectedPath, point::Point, ant::Ant)
 		ant.current_point = point
 		append!(ant.visited_points, [point])
 		path.number_of_ants_crossed += 1
-		#leave_pheromones_colony(path)
 	else
 		println("something wrong I can feel it")
-		# println(ant.visited_points, "\n", point, "\n")
 		return -1
 	end
 end
