@@ -59,10 +59,24 @@ function generate_map(x_coordinates, y_coordinates)
 		for i in 1:len_x
 			for j in 1:len_x
 				if points[i] != points[j]
-					path = UndirectedPath(path_id, Pair(points[i].id, points[j].id), sqrt(abs(x_coordinates[i]-x_coordinates[j])^2 + abs(y_coordinates[i]-y_coordinates[j])^2), 0.0001 )
-					append!(paths, [path])
-					add_path(points[i], path)
-					path_id +=1
+					create = true
+					for path in paths
+						if  (path.connection.first == points[i].id || 
+							path.connection.second == points[i].id) &&
+							(path.connection.first == points[j].id || 
+							path.connection.second == points[j].id)
+							
+							create = false
+							break
+						end
+					end
+					if create == true
+						path = UndirectedPath(path_id, Pair(points[i].id, points[j].id), sqrt(abs(x_coordinates[i]-x_coordinates[j])^2 + abs(y_coordinates[i]-y_coordinates[j])^2), 0.0001 )
+						
+						append!(paths, [path])
+						add_path(points[i], path)
+						path_id +=1
+					end
 				end
 			end
 		end
@@ -161,7 +175,6 @@ function ant_available_paths(graph::Graph, ant::Ant)
 
 	for path in ant.current_point.connections
 		for connection in path.directions
-			if path.directions.first.first == ant.current_point && path.connection.second ∉ ant.visited_points 
 
 			if path.connection ∉ ant.used_paths && path.connection.second != ant.starting_point && path.connection.first != ant.starting_point
 				append!(avaliable_paths, [path])
@@ -535,8 +548,8 @@ function main()
 	# graph = data_init()
 	graph = generate_map(x, y)
 	#traveling_sales(graph, 1, 3)
-	used_paths = ant_system(graph, 1, 200)
-	visualize_graph(graph, used_paths)
+	# used_paths = ant_system(graph, 1, 200)
+	# visualize_graph(graph, used_paths)
 
 end
 

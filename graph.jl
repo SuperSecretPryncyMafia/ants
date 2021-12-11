@@ -1,19 +1,17 @@
 
-mutable struct DirectedPath
-    connection::Pair{Int, Int}
-end
+# mutable struct DirectedPath
+#     connection::Pair{Int, Int}
+# end
 
 mutable struct UndirectedPath
     id::Int
     weight::Real
     pheromones::Float64
-    directions::Pair{Pair{Int,Int}, Pair{Int, Int}}
-    Δτ::Float64
+    connection::Pair{Int,Int}
     number_of_ants_crossed::Int
 
     function UndirectedPath(id, connection, weight, pheromones)
-        directions = Pair(connection, reverse(connection))
-        new(id, weight, directions, pheromones, 0, 0)
+        new(id, weight, pheromones, connection, 0)
     end
 end
 
@@ -23,8 +21,6 @@ mutable struct Point
     coordinates::Vector{Real}
     connections::Vector{UndirectedPath}
 end
-
-#UndirectedPath(id, connection, weight, pheromones ) = UndirectedPath(Pair{DirectedPath(id, connection, weight, pheromones, 0, 0), DirectedPath(id, reverse(connection), weight, pheromones, 0, 0 )})
 
 Point(id, value) = Point(id, value, [], [])
 Point(id, value, coordinates) = Point(id, value, coordinates, [])
