@@ -9,9 +9,10 @@ mutable struct UndirectedPath
     pheromones::Float64
     connection::Pair{Int,Int}
     number_of_ants_crossed::Int
+    Δτ::Float64
 
     function UndirectedPath(id, connection, weight, pheromones)
-        new(id, weight, pheromones, connection, 0)
+        new(id, weight, pheromones, connection, 0, 0)
     end
 end
 
@@ -30,13 +31,19 @@ mutable struct Graph
     paths::Vector{UndirectedPath}
 end
 
-function add_path(point::Point, path::UndirectedPath)
-    append!(point.connections, [path])
-end
-
-function add_paths(point::Point, paths::Vector{UndirectedPath})
-    for path in paths
-        add_path(point, [path])
+function find_path(a::Point, b::Point)
+    # println("-----------------------",a,b,a.connections, b.connections)
+    for path in a.connections
+        if  path.connection.first == b.id ||
+            path.connection.second == b.id
+            return path
+        end
+    end
+    for path in b.connections
+        if  path.connection.first == a.id ||
+            path.connection.second == a.id
+            return path
+        end
     end
 end
 
@@ -55,6 +62,16 @@ function point_at(graph::Graph, point_id::Int)
         end
     end
     println("No point witch such ID.")
+    return NaN
+end
+
+function path_at(graph::Graph, path_id::Int)
+    for path in graph.paths
+        if path.id == path_id
+            return path
+        end
+    end
+    println("No path witch such ID.")
     return NaN
 end
 
