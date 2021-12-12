@@ -5,8 +5,8 @@ using Distributions
 using Plots
 
 
-const x = [3 2 12 7 9  3 16 11 9 2]
-const y = [1 4 2 4.5 9  1.5 11 8 10 7]
+const x = [3 2 12 7 9 3 16 11 9 2]
+const y = [1 4 2 4.5 9 1.5 11 8 10 7]
 
 mutable struct Ant
 	current_point::Point
@@ -176,33 +176,23 @@ function rulette_choose(decision_table, graph::Graph, ant::Ant)
 	return NaN
 end
 
-function ant_available_paths(graph::Graph, ant::Ant)
-	# println("-------------",ant.visited_points, ant.current_point.connections, ant.current_point)
-    # if length(ant.visited_points) == 1 
-	# 	return ant.current_point.connections
-	# end
+function ant_available_paths(ant::Ant)
 	available_paths = Vector{UndirectedPath}()
-#   TODO 3===D
+
 	for path in ant.current_point.connections
 		if path.connection.first == ant.current_point.id
-			if point_at(graph, path.connection.second) ∉ ant.visited_points
+			if path.connection.second in [point.id for point in ant.visited_points]
+			else
 				append!(available_paths, [path])
 			end
 		elseif path.connection.second == ant.current_point.id
-			if path_at(graph, path.connection.first) ∉ ant.visited_points
+			if path.connection.first in [point.id for point in ant.visited_points]
+			else
 				append!(available_paths, [path])
 			end
 		end
 	end
 
-	# for path in ant.current_point.connections
-	# 	if path ∉ ant.used_paths
-	# 		if point == path.connection.first
-	# 		append!(avaliable_paths, [path])
-	# 	end
-
-    # end
-	# println(avaliable_paths)
     return available_paths
 end
 
@@ -411,7 +401,7 @@ function ant_move_to(graph::Graph, path::UndirectedPath, ant::Ant)
 
 end
 
-function traveling_sales(graph::Graph, starting_point_id::Int, finish_point_id::Int, type::String="default")
+function shortest_path(graph::Graph, starting_point_id::Int, finish_point_id::Int, type::String="default")
 	# Initialization
 	starting_point = point_at(graph, starting_point_id)
 	finish_point = point_at(graph, finish_point_id)
@@ -451,7 +441,7 @@ function ant_system(graph::Graph, start_destination_id::Int, max_iter::Int=200)
 		ants = init_ants(graph, number_of_points)
 		for ant in ants
 			while length(ant.visited_points) < number_of_points
-				paths = ant_available_paths(graph, ant)
+				paths = ant_available_paths(ant)
 				decision = roll_next_path(decision_table, paths, ant)
 				if ant_move_to(graph, decision, ant) == -1
 					println("errrrr")
@@ -466,7 +456,7 @@ function ant_system(graph::Graph, start_destination_id::Int, max_iter::Int=200)
 	
 	# best_path()  -- TODO
 
-	# [println(decision_table[x],"\t", x) for x in keys(decision_table)]
+	[println(decision_table[x],"\t", x) for x in keys(decision_table)]
 
 	return best_ant(ants)
 end
@@ -502,11 +492,7 @@ function ant_colony_system(graph::Graph, start_destination_id::Int, max_iter::In
 					break
 				end
 			end
-			# decision = [x for x in ant.current_point.connections if x.connection.second == starting_points[j]]
-			#println(length(decision))
 
-			
-			
 			if ant.current_point == starting_points[j]
 				ant_move_to(decision, graph.points[decision.connection.second], ant)
 				decision_table = update_decision_table_colony(graph, decision_table, ant)
