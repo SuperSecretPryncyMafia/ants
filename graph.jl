@@ -1,8 +1,4 @@
 
-# mutable struct DirectedPath
-#     connection::Pair{Int, Int}
-# end
-
 mutable struct UndirectedPath
     id::Int
     weight::Real
@@ -32,7 +28,6 @@ mutable struct Graph
 end
 
 function find_path(a::Point, b::Point)
-    # println("-----------------------",a,b,a.connections, b.connections)
     for path in a.connections
         if  path.connection.first == b.id ||
             path.connection.second == b.id
@@ -111,20 +106,6 @@ function find_all_paths_with_point(paths::Vector{UndirectedPath}, point::Point)
     return conns
 end
 
-
-# function all_paths_from(graph::Graph, point::Point)
-#     paths_from_point = []
-
-#     for path in graph.paths
-#         if point.id in path.connection
-#             append!(paths_from_point, path)
-#         end
-#     end
-
-#     return paths_from_point
-# end
-
-
 function point_id(graph::Graph, point_at::Point)
     for index in 1:length(graph.points)
         if graph.points[index] == point_at
@@ -165,37 +146,32 @@ function init_distances(start_point_id::Int, graph::Graph)
     return distances
 end
 
+# Example of usage
+#
 # raw"""
-# point1 ----- point3 ----- point5         
-#     \              \     /
-#      \              \   /
-#       point2 ----- point 4
-
+# point1 ----- point2 ---- point3         
+#     \       /      \      /
+#      \     /        \    /
+#       \ __/          \__/
+#
 # """
+# point1 = Point(1, 1)
+# point2 = Point(2, 1)
+# point3 = Point(3, 1)
 
-# point1 = Point(1, 5, [2,2])
-# point2 = Point(2, 4, [3,8])
-# point3 = Point(3, 3, [4,6])
-# point4 = Point(4, 2, [5,4])
-# point5 = Point(5, 1, [6,1])
+# path1 = UndirectedPath(1,Pair(point1.id, point2.id), 2, 1.0)
+# path2 = UndirectedPath(2,Pair(point1.id, point2.id), 1, 1.0)
+# path3 = UndirectedPath(3,Pair(point2.id, point3.id), 2, 1.0)
+# path4 = UndirectedPath(4,Pair(point2.id, point3.id), 1, 1.0)
 
-# path1 = UndirectedPath(Pair(point1.id, point2.id), 2)
-# path2 = UndirectedPath(Pair(point1.id, point3.id), 5)
-# path3 = UndirectedPath(Pair(point2.id, point4.id), 2)
-# path4 = UndirectedPath(Pair(point3.id, point4.id), 1)
-# path5 = UndirectedPath(Pair(point3.id, point5.id), 1)
-# path6 = UndirectedPath(Pair(point4.id, point5.id), 1)
+# point1.connections = Vector{UndirectedPath}([path1, path2])
+# point2.connections = Vector{UndirectedPath}([path3, path4])
+# graph = Graph([], [])
 
-# graph = Graph([],[])
-
-# points = [point1, point2, point3, point4, point5]
-# paths = [path1, path2, path3, path4, path5, path6]
+# points = [point1, point2, point3]
+# paths = [path1, path2, path3, path4] 
 
 # graph.paths = paths
 # graph.points = points
 
-# #graph = Graph(points, paths)
-
-# test_graph(graph)
-
-# dijiksta(3, 5, graph)
+# return graph
