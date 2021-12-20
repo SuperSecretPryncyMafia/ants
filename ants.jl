@@ -5,8 +5,9 @@ using Distributions
 using Plots
 
 
-const x = [3 2 12 7 9 3 16 11 9 2]
-const y = [1 4 2 4.5 9 1.5 11 8 10 7]
+x = [0 3 6 7 15 10 16 5 8 1.5]
+y = [1 2 1 4.5 -1 2.5 11 6 9 12]
+
 
 mutable struct Ant
 	current_point::Point
@@ -132,7 +133,7 @@ function roll_next_path(decision_table::Dict{Any, Any}, available_paths::Vector{
     end
 
     roll = rand(Uniform(0, 1))*top
-    
+    # println(top)
     for i in 1:length(order)
         if roll < order[i]
             return available_paths[i]
@@ -193,7 +194,6 @@ function best_ant(ants::Vector{Any})
 end
 
 function init_decision_table(graph::Graph)
-
 	decision_table = Dict()
 	for point in graph.points
 		# find_all_connections(graph, point)
@@ -372,7 +372,6 @@ function shortest_path(graph::Graph, starting_point_id::Int, finish_point_id::In
 				paths = ant.current_point.connections
 				println(paths)
 				if length(paths) > 1
-					# paths = ant_available_paths(ant)
 					decision = roll_next_path(decision_table, paths, ant)
 					ant_move_to(graph, decision, ant)
 				end
@@ -406,17 +405,17 @@ function ant_system(graph::Graph, start_destination_id::Int, max_iter::Int=200)
 			ant_move_to(graph, decision, ant)
 		end
 		decision_table = update_decision_table(graph, decision_table, ants)
+		z = [sum([y.weight for y in x.used_paths ]) for x in ants]
+		println(minimum(z))
 	end
 
 	[println(decision_table[x],"\t", x) for x in keys(decision_table)]
 
 	return best_ant(ants)
+
 end
 
-function ant_colony_system(graph::Graph, start_destination_id::Int, max_iter::Int=200)
-	# Initialization
-	starting_point = point_at(graph, start_destination_id)
-
+function ant_colony_system(graph::Graph,max_iter::Int=200)
 	number_of_points = length(graph.points)
 	println(number_of_points)
 	decision_table = init_decision_table(graph)
@@ -431,7 +430,6 @@ function ant_colony_system(graph::Graph, start_destination_id::Int, max_iter::In
 					println("errrrr")
 				end
 			end
-
 			decision = find_path(ant.current_point, ant.starting_point)
 			ant_move_to(graph, decision, ant)
 		end
@@ -447,7 +445,7 @@ function visualize_graph(graph::Graph, used_paths)
 	points_coords_x = [point.coordinates[1] for point in graph.points]
 	points_coords_y = [point.coordinates[2] for point in graph.points]
 
-	plot(legend=false)
+	plot(legend=false, thickness_scaling = 0.6)
 
 	for index in 2:length(graph.points)
 		first_point = graph.points[index]
@@ -455,19 +453,20 @@ function visualize_graph(graph::Graph, used_paths)
 			second_point = graph.points[jndex]
 			x = [first_point.coordinates[1], second_point.coordinates[1]]
 			y = [first_point.coordinates[2], second_point.coordinates[2]]
-			path_weight = 0
+			path_weight = 1
 
-			plot!(x, y, lw=path_weight*1)
+			plot!(x, y, lw=path_weight*1, color="lightblue")
 		end
 		for path in used_paths
 			plot!(
 				[point_at(graph, path.connection.first).coordinates[1], point_at(graph, path.connection.second).coordinates[1]], 
 				[point_at(graph, path.connection.first).coordinates[2], point_at(graph, path.connection.second).coordinates[2]], 
-				lw=3
+				lw=3,
+				color="#73C6B6"
 			)   
 		end
 	end
-	scatter!(points_coords_x, points_coords_y)
+	scatter!(points_coords_x, points_coords_y, color="#73C6B6", series_annotations=text.(1:length(x), :bottom))
 end
 
 function main()
