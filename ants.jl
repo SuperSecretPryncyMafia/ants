@@ -133,7 +133,6 @@ function roll_next_path(decision_table::Dict{Any, Any}, available_paths::Vector{
     end
 
     roll = rand(Uniform(0, 1))*top
-    # println(top)
     for i in 1:length(order)
         if roll < order[i]
             return available_paths[i]
